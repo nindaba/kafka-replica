@@ -1,13 +1,14 @@
-import java.io.BufferedReader;
+import exceptions.KafkaException;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Scanner;
+import java.util.Arrays;
 
 public class Main {
+    private static final VersionValidator versionValidator = new VersionValidator();
+
     public static void main(String[] args) {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.err.println("Logs from your program will appear here!");
@@ -26,32 +27,34 @@ public class Main {
             clientSocket = serverSocket.accept();
 
             var in = clientSocket.getInputStream();
-
-            int headerSize = 12;
-
-            byte[] messageSizeAndHeader = new byte[headerSize];
+            var out = clientSocket.getOutputStream();
+            int messageSizeAndHeaderLength = 12;
+            byte[] messageSizeAndHeader = new byte[messageSizeAndHeaderLength];
+            byte[] correlationId = new byte[4];
+            byte[] messageSize;
+            byte[] message = new byte[0];
 
 
             int length = in.read(messageSizeAndHeader);
 
-            if(length < headerSize){
+            if (length < messageSizeAndHeaderLength) {
                 throw new IOException("Could not read the request message size is %s less than 8 bytes".formatted(length));
             }
 
-            var out = clientSocket.getOutputStream();
 
-            byte[] message = "This is my message to kafka".getBytes();
-            byte[] correlationId = new byte[4];
-            byte[] messageSize = new byte[4];
+            try {
+                short version = ByteBuffer.wrap(messageSizeAndHeader).getShort(6);
+                versionValidator.validate(version);
 
-            ByteBuffer.wrap(messageSizeAndHeader).get(8,correlationId);
+            } catch (KafkaException e) {
+                message = e.errorCode();
+            }
 
+            ByteBuffer.wrap(messageSizeAndHeader) .get(8, correlationId);
 
-
-            int size = message.length + correlationId.length;
-
-            for(int i = 0; i < 4; i++)
-                messageSize[3-i] = (byte) (size << 8*i);
+            messageSize = ByteBuffer.allocate(4)
+                    .putInt(message.length + 4)
+                    .array();
 
             out.write(messageSize);
             out.write(correlationId);
@@ -70,3 +73,8 @@ public class Main {
         }
     }
 }
+
+//public static void main(String[] args){
+//    byte[] b = {1,1,1,1};
+//    System.out.println(ByteBuffer.wrap(b)..getInt());
+//}
