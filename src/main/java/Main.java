@@ -1,8 +1,11 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -22,18 +25,30 @@ public class Main {
             // Wait for connection from client.
             clientSocket = serverSocket.accept();
 
+            var in = clientSocket.getInputStream();
+
+            byte[] messageSizeAndHeader = new byte[8];
+
+
+            int length = in.read(messageSizeAndHeader);
+
+            if(length < 8){
+                throw new IOException("Could not read the request message size is %s less than 8 bytes".formatted(length));
+            }
+
+
+
             var out = clientSocket.getOutputStream();
 
             byte[] message = "This is my message to kafka".getBytes();
-            byte[] correlationId = {0, 0, 0, 7};
+            byte[] correlationId = ByteBuffer.wrap(messageSizeAndHeader,4,4).array();
+            byte[] messageSize = new byte[4];
+
 
             int size = message.length + correlationId.length;
 
-            byte[] messageSize = ByteBuffer
-                .allocate(4)
-                .order(ByteOrder.BIG_ENDIAN)
-                .putInt(size)
-                .array();
+            for(int i = 0; i < 4; i++)
+                messageSize[3-i] = (byte) (size << 8*i);
 
             out.write(messageSize);
             out.write(correlationId);
