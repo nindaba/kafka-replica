@@ -27,22 +27,25 @@ public class Main {
 
             var in = clientSocket.getInputStream();
 
-            byte[] messageSizeAndHeader = new byte[8];
+            int headerSize = 12;
+
+            byte[] messageSizeAndHeader = new byte[headerSize];
 
 
             int length = in.read(messageSizeAndHeader);
 
-            if(length < 8){
+            if(length < headerSize){
                 throw new IOException("Could not read the request message size is %s less than 8 bytes".formatted(length));
             }
-
-
 
             var out = clientSocket.getOutputStream();
 
             byte[] message = "This is my message to kafka".getBytes();
-            byte[] correlationId = ByteBuffer.wrap(messageSizeAndHeader,4,4).array();
+            byte[] correlationId = new byte[4];
             byte[] messageSize = new byte[4];
+
+            ByteBuffer.wrap(messageSizeAndHeader).get(8,correlationId);
+
 
 
             int size = message.length + correlationId.length;
