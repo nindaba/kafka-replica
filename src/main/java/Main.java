@@ -39,27 +39,26 @@ public class Main {
             short version = ByteBuffer.wrap(apiVersion).getShort();
 
             try {
-                versionValidator.validate(key,version);
+                versionValidator.validate(key, version);
 
             } catch (KafkaException e) {
                 message = e.errorCode();
             }
 
             byte[] messageSize = ByteBuffer.allocate(4)
-                    .putInt(144) // 32 + 16 + 8 + 16 + 16 + 16 + 32 + 8
-                    .array();
+                .putInt((4 +2 +1 +2 +4 +1 +4 +1))
+                .array();
 
 
             out.write(messageSize);
-            out.write(correlationId);
-            out.write(message);
-            out.write(new byte[]{1+1});
-            out.write(apiKey);
-            out.write(apiVersionHelper.versionRange(key));
-            out.write(new byte[4]);
-            out.write(new byte[1]);
-
-            out.flush();
+            out.write(correlationId);                           /* 4 bytes*/
+            out.write(message);                                 /* 2 bytes  The top-level error code.*/
+            out.write(new byte[]{1 + 1});                       /* 1 byte   The APIs supported by the broker.*/
+            out.write(apiKey);                                  /* 2 bytes  Api index */
+            out.write(apiVersionHelper.versionRange(key));      /* 4 bytes  min + max versions */
+            out.write(new byte[1]);                             /* 1 byte   api tag_buffer of tagged fields*/
+            out.write(new byte[4]);                             /* 4 bytes  The duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota. */
+            out.write(new byte[1]);                             /* 1 byte   tagged fields */
 
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
