@@ -46,16 +46,20 @@ public class Main {
             }
 
             byte[] messageSize = ByteBuffer.allocate(4)
-                    .putInt(136) // 32 + 32 + 16 + 8 + 16 + 16 + 16
+                    .putInt(144) // 32 + 16 + 8 + 16 + 16 + 16 + 32 + 8
                     .array();
 
 
             out.write(messageSize);
             out.write(correlationId);
             out.write(message);
-            out.write(1+1);
+            out.write(new byte[]{1+1});
             out.write(apiKey);
             out.write(apiVersionHelper.versionRange(key));
+            out.write(new byte[4]);
+            out.write(new byte[1]);
+
+            out.flush();
 
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
