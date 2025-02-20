@@ -70,10 +70,3 @@ public class Main {
         }
     }
 }
-
-//public static void main(String[] args) throws IOException {
-//    OutputStream out = System.out;
-//    out.write(new byte[]{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'},5,3);
-//
-//    out.flush();
-//}
