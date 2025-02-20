@@ -42,7 +42,7 @@ public class Main {
                 versionValidator.validate(key,version);
 
             } catch (KafkaException e) {
-                out.write(e.errorCode());
+                message = e.errorCode();
             }
 
             byte[] messageSize = ByteBuffer.allocate(4)
