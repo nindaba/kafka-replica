@@ -1,5 +1,16 @@
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-public interface ConfigConstants {
-    static Set<Integer> SUPPORTED_VERSOINS = Set.of(0,1,2,3,4);
+public class ConfigConstants {
+    static short[] SUPPORTED_VERSOINS = {0,4};
+
+    static Map<Short, short[]> API_KEY_VERSIONS;
+
+    static {
+        API_KEY_VERSIONS = new HashMap<>();
+
+        API_KEY_VERSIONS.put((short) 18,SUPPORTED_VERSOINS);
+    }
+
 }
