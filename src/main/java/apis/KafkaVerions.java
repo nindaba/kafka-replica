@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
+import java.util.Arrays;
 
 
 public class KafkaVerions implements KafkaApi {
@@ -25,7 +25,7 @@ public class KafkaVerions implements KafkaApi {
         try {
             var requestMessage = in.readNBytes(size);
             var requestBuffer = ByteBuffer.wrap(requestMessage);
-            var responseBuffer = buffer(19);
+            var responseBuffer = buffer(24);
             var erroCode = buffer(2);
             var verion = requestBuffer.getShort();
             var correlationId = requestBuffer.getInt();
@@ -51,17 +51,25 @@ public class KafkaVerions implements KafkaApi {
                     .put(ZERO)
                     .putInt(0);
 
-            if(verion != 3){
+
+            if (verion != 3)
                 responseBuffer.put(ZERO);
-            }
 
             responseBuffer.flip();
 
+            var responseSize = responseBuffer.remaining();
+            var responseMessage = new byte[responseSize];
+
+            responseBuffer.get(responseMessage);
+
+
+            log.info("Versions Api response for correlation ID :{} with message size of {} bytes", correlationId, responseMessage.length);
+
             out.write(buffer(4)
-                    .putInt(responseBuffer.remaining())
+                    .putInt(responseSize)
                     .array());
 
-            out.write(responseBuffer.array());
+            out.write(responseMessage);
 
             out.flush();
         } catch (IOException e) {
