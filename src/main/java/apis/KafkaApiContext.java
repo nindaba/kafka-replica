@@ -5,18 +5,17 @@ import java.util.Map;
 
 public class KafkaApiContext {
     private static final Map<Short, KafkaApi> APIS = new HashMap<>();
+    private static final KafkaApi VERIONS_API;
 
     static {
-        APIS.put((short) 18, Apis.VERIONS_API);
+        VERIONS_API = new KafkaVerions();
+        
+        APIS.put(KafkaVerions.API_VERSIONS_KEY, VERIONS_API);
     }
 
 
     public static KafkaApi get(short apiKey) {
-        return APIS.getOrDefault(apiKey, Apis.VERIONS_API);
-    }
-
-    private interface Apis {
-        KafkaApi VERIONS_API = new KafkaVerions();
+        return APIS.getOrDefault(apiKey, VERIONS_API);
     }
 }
 

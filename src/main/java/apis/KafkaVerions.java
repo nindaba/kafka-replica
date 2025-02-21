@@ -7,11 +7,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import static constants.ConfigConstants.ApiKeys.API_VERSIONS_KEY;
-
 public class KafkaVerions implements KafkaApi {
+    public static short API_VERSIONS_KEY = (short) 18;
     private static final short[] SUPPORTED_VERSIONS = {3, 4};
     private static final byte ZERO = 0;
+
 
     @Override
     public void handle(short key, int size, InputStream in, OutputStream out) {
@@ -35,7 +35,7 @@ public class KafkaVerions implements KafkaApi {
                 responseBuffer.put(erroCode);
             }
 
-            var responseMessage = responseBuffer.put((byte) 2)
+            responseBuffer.put((byte) 2)
                 .putShort(key)
                 .put(versionRange(key, api))
                 .put(ZERO)
@@ -48,7 +48,7 @@ public class KafkaVerions implements KafkaApi {
                 .putInt(responseBuffer.remaining())
                 .array());
 
-            out.write(responseMessage);
+            out.write(responseBuffer.array());
 
         } catch (IOException e) {
             System.err.printf("Could not validate api version %n");
