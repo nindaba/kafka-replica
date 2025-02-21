@@ -25,7 +25,7 @@ public class KafkaVerions implements KafkaApi {
         try {
             var requestMessage = in.readNBytes(size);
             var requestBuffer = ByteBuffer.wrap(requestMessage);
-            var responseBuffer = buffer(24);
+            var responseBuffer = buffer(19);
             var erroCode = buffer(2);
             var verion = requestBuffer.getShort();
             var correlationId = requestBuffer.getInt();
