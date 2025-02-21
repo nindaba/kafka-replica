@@ -2,6 +2,7 @@ package apis;
 
 import constants.ErrorCodes;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -11,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 class KafkaVersionsHexTest {
     private static final short API_VERSION_MESSAGE_SIZE_V3 = 18;
     private static final short API_VERSION_MESSAGE_SIZE_V4 = 19;

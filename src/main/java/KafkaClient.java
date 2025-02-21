@@ -15,7 +15,7 @@ public record KafkaClient(Socket clientSocket) implements Runnable {
 
             var messageSize = new byte[4];
 
-            while (true) {
+            while (true){
                 if (in.read(messageSize) == 4) {
                     short key = wrap(in.readNBytes(2))
                             .getShort();

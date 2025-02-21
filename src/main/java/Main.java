@@ -10,31 +10,21 @@ public class Main {
 
         // Uncomment this block to pass the first stage
 
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
         int port = 9092;
-        try {
-            serverSocket = new ServerSocket(port);
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             // Since the tester restarts your program quite often, setting SO_REUSEADDR
             // ensures that we don't run into 'Address already in use' errors
             serverSocket.setReuseAddress(true);
             // Wait for connection from client.
-            clientSocket = serverSocket.accept();
-
-            var client = new KafkaClient(clientSocket);
-
-            client.run();
-
-        } catch (IOException e) {
-            System.out.println("IOException: " + e.getMessage());
-        } finally {
-            try {
-                if (clientSocket != null) {
-                    clientSocket.close();
-                }
+            try (Socket clientSocket = serverSocket.accept()) {
+                var client = new KafkaClient(clientSocket);
+                client.run();
             } catch (IOException e) {
                 System.out.println("IOException: " + e.getMessage());
             }
+        } catch (
+                IOException e) {
+            System.out.println("IOException: " + e.getMessage());
         }
     }
 }
