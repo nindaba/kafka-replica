@@ -1,16 +1,23 @@
 package apis;
 
 import constants.ErrorCodes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+
 
 public class KafkaVerions implements KafkaApi {
     public static short API_VERSIONS_KEY = (short) 18;
     private static final short[] SUPPORTED_VERSIONS = {3, 4};
     private static final byte ZERO = 0;
+
+    private static final Logger log = LogManager.getLogger(KafkaVerions.class);
 
 
     @Override
@@ -18,38 +25,45 @@ public class KafkaVerions implements KafkaApi {
         try {
             var requestMessage = in.readNBytes(size);
             var requestBuffer = ByteBuffer.wrap(requestMessage);
-            var responseBuffer = ByteBuffer.allocate(24);
+            var responseBuffer = buffer(19);
+            var erroCode = buffer(2);
             var verion = requestBuffer.getShort();
+            var correlationId = requestBuffer.getInt();
+
             var api = KafkaApiContext.get(key);
 
-            responseBuffer.putInt(requestBuffer.getInt());
-
+            log.info("Received request with correlation ID: {} for api versions for : {} , and checking support for version: {}", correlationId, key, verion);
 
             if (isSupported(api, key, verion))
-                responseBuffer.put(new byte[2]);
+                erroCode.putShort(ErrorCodes.NONE);
             else {
-                var erroCode = ByteBuffer.allocate(2)
-                    .putShort(ErrorCodes.UNSUPPORTED_VERSION)
-                    .array();
-                
-                responseBuffer.put(erroCode);
+                log.error("Unsupported api: {} version: {} with correlation ID: {}", key, verion, correlationId);
+                erroCode.putShort(ErrorCodes.UNSUPPORTED_VERSION);
             }
 
-            responseBuffer.put((byte) 2)
-                .putShort(key)
-                .put(versionRange(key, api))
-                .put(ZERO)
-                .putInt(0)
-                .put(ZERO)
-                .flip()
-                .array();
+            log.info("Correlation id: {}", correlationId);
 
-            out.write(ByteBuffer.allocate(4)
-                .putInt(responseBuffer.remaining())
-                .array());
+            responseBuffer.putInt(correlationId)
+                    .put(erroCode.array())
+                    .put((byte) 2)
+                    .putShort(key)
+                    .put(versionRange(key, api))
+                    .put(ZERO)
+                    .putInt(0);
+
+            if(verion != 3){
+                responseBuffer.put(ZERO);
+            }
+
+            responseBuffer.flip();
+
+            out.write(buffer(4)
+                    .putInt(responseBuffer.remaining())
+                    .array());
 
             out.write(responseBuffer.array());
 
+            out.flush();
         } catch (IOException e) {
             System.err.printf("Could not validate api version %n");
             throw new RuntimeException(e);
@@ -58,13 +72,7 @@ public class KafkaVerions implements KafkaApi {
 
     @Override
     public boolean isSupported(short version) {
-        if (SUPPORTED_VERSIONS[0] > version || version > SUPPORTED_VERSIONS[1]) {
-            System.err.println("The requested api version is not supported");
-
-            return false;
-        }
-
-        return true;
+        return SUPPORTED_VERSIONS[0] <= version && version <= SUPPORTED_VERSIONS[1];
     }
 
     @Override
@@ -72,20 +80,29 @@ public class KafkaVerions implements KafkaApi {
         return SUPPORTED_VERSIONS;
     }
 
+    @Override
+    public short key() {
+        return API_VERSIONS_KEY;
+    }
 
     private boolean isSupported(KafkaApi api, short key, short verion) {
-        if (key == API_VERSIONS_KEY) {
-            return isSupported(verion);
+        if (api.key() == key) {
+            return api.isSupported(verion);
         }
 
-        return api.isSupported(verion);
+        return false;
     }
 
     private byte[] versionRange(short key, KafkaApi api) {
-        if (key == API_VERSIONS_KEY) {
-            return versionRage();
+        if (api.key() == key) {
+            return api.versionRage();
         }
 
-        return api.versionRage();
+        return new byte[]{0, 0, 0, 0};
+    }
+
+    private ByteBuffer buffer(int capacity) {
+        return ByteBuffer.allocate(capacity)
+                .order(ByteOrder.BIG_ENDIAN);
     }
 }

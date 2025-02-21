@@ -7,9 +7,8 @@ import java.nio.ByteBuffer;
 
 public interface KafkaApi {
     void handle(short key, int size, InputStream in, OutputStream out);
-
+    short key();
     boolean isSupported(short version);
-
     short[] supportedVersions();
 
     default byte[] versionRage() {
