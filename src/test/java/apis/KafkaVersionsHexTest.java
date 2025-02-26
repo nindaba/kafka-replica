@@ -1,15 +1,14 @@
 package apis;
 
-import constants.ErrorCodes;
+import ai.jet.kafka.apis.KafkaVerions;
+import ai.jet.kafka.constants.ErrorCodes;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import static org.junit.jupiter.api.Assertions.*;
 class KafkaVersionsHexTest {
